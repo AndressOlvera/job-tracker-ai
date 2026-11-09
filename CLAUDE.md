@@ -33,6 +33,8 @@ Backend (desde `backend/`, con `.venv` activo):
 - Instalar: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt`
 - Revisar: `ruff check . && ruff format --check .`
 - Probar: `pytest` (cobertura mínima 80 %). Necesita PostgreSQL: `docker compose up -d db` desde la raíz.
+- Datos de ejemplo: `flask seed` (no inserta si ya hay filas; `flask seed --reset` vacía la tabla y vuelve a cargar).
+- `flask` en local necesita `APP_ENV=development` (en el entorno o en `.env`); sin esa variable se asume producción.
 
 Frontend (desde `frontend/`):
 - `npm ci`, `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test`, `npm run build`
