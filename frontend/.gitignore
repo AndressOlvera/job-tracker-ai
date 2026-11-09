@@ -1,0 +1,6 @@
+# La raíz ya ignora node_modules, dist, coverage y los .env; esto cubre lo propio de Vite.
+node_modules
+dist
+dist-ssr
+coverage
+*.local

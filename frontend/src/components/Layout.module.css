@@ -1,0 +1,110 @@
+/* Fuera de la vista hasta que recibe el foco con el teclado. */
+.skipLink {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 100;
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-200%);
+}
+
+.skipLink:focus {
+  transform: none;
+}
+
+.header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* En celular la navegación pasa a una segunda fila en lugar de desbordar. */
+.headerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-5);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-4);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--color-text);
+}
+
+.logo {
+  width: 1.25rem;
+  height: 1.25rem;
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.navList {
+  display: flex;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  padding: 0 var(--space-3);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+
+.navLink:hover {
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* La pantalla actual se distingue por fondo, peso y subrayado, no solo por color. */
+.navLink[aria-current='page'] {
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  box-shadow: inset 0 -3px 0 var(--color-primary);
+}
+
+.main {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-7);
+}
+
+/* El foco llega aquí por "Saltar al contenido"; el enlace ya cumplió su función visual. */
+.main:focus {
+  outline: none;
+}
+
+@media (min-width: 48rem) {
+  .headerInner {
+    padding-inline: var(--space-5);
+  }
+
+  .main {
+    padding: var(--space-6) var(--space-5) var(--space-7);
+  }
+}
