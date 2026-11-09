@@ -1,0 +1,16 @@
+# Normaliza los finales de línea a LF (estilo Linux) para evitar
+# problemas al trabajar entre Windows, WSL, Docker y GitHub Actions.
+* text=auto eol=lf
+
+# Archivos binarios: Git no debe modificarlos
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.mp4 binary

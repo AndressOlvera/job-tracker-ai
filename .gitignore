@@ -1,0 +1,55 @@
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# ---------- Node / frontend ----------
+node_modules/
+dist/
+coverage/
+*.log
+*.tsbuildinfo
+
+# ---------- Playwright ----------
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# ---------- Terraform ----------
+# .terraform.lock.hcl SÍ se versiona (fija las versiones de los proveedores)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# ---------- Secretos y variables de entorno ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---------- Editores y sistema operativo ----------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+# Archivos que Windows agrega al copiar descargas hacia WSL
+*:Zone.Identifier
