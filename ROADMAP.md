@@ -25,7 +25,7 @@ con qué comprobar su trabajo desde el primer PR; y los PR son por fase, no por 
 
 ## Fase 1 · Backend
 
-- [ ] **Base de datos local con Docker Compose** (#2)
+- [x] **Base de datos local con Docker Compose** (#2)
   - Listo cuando: `docker compose up -d db` levanta PostgreSQL 16 con una base para desarrollo y otra para pruebas, y existe `.env.example` con las variables necesarias.
 - [ ] **Estructura de la app Flask** (#3)
   - Listo cuando: existe la app con *application factory*, configuración por entorno (desarrollo, pruebas, producción) y `GET /api/v1/health` responde con el estado de la API y la base.
