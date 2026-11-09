@@ -48,7 +48,7 @@ con qué comprobar su trabajo desde el primer PR; y los PR son por fase, no por 
 
 - [x] **Proyecto React + TypeScript con Vite** (#11)
   - Listo cuando: el proyecto arranca, ESLint y Prettier están configurados y el proxy de `/api` de Vite apunta a `flask run`.
-- [ ] **Cliente de la API con tipos** (#12)
+- [x] **Cliente de la API con tipos** (#12)
   - Listo cuando: existen tipos de TypeScript para `Application`, filtros y estadísticas (según `docs/03-api.md`), y funciones para cada endpoint.
 - [ ] **Pantalla de lista** (#13) (HU-02, HU-03, HU-07)
   - Listo cuando: muestra la tabla con filtros en la URL, orden, paginación y estados de carga, vacío y error.
