@@ -26,13 +26,13 @@ export function Layout() {
           <nav aria-label="Principal">
             <ul className={styles.navList}>
               <li>
-                {/* `end`: solo se marca activa en `/`, no en cualquier ruta que empiece con `/`. */}
                 <NavLink to="/" end className={styles.navLink}>
                   Postulaciones
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/stats" className={styles.navLink}>
+                {/* `end`: una ruta inexistente como `/stats/otra` no debe anunciarse como página actual. */}
+                <NavLink to="/stats" end className={styles.navLink}>
                   Estadísticas
                 </NavLink>
               </li>

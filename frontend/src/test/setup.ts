@@ -8,4 +8,5 @@ afterEach(() => {
 });
 
 // jsdom no implementa el scroll y <ScrollRestoration> lo usa al navegar.
-window.scrollTo = () => {};
+// Las pruebas con `@vitest-environment node` (p. ej. vite.config.test.ts) no tienen `window`.
+if (typeof window !== 'undefined') window.scrollTo = () => {};
