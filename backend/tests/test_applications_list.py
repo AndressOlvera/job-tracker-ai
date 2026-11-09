@@ -46,6 +46,15 @@ def test_items_are_full_application_objects(client):
     assert _list(client)["items"] == [created]
 
 
+def test_deleted_application_leaves_the_list(client):
+    kept = _create(client, "Queda")
+    removed = _create(client, "Se va")
+
+    assert client.delete(f"{BASE}/{removed['id']}").status_code == 204
+
+    assert _list(client)["items"] == [kept]
+
+
 def test_default_order_is_most_recent_first(client):
     _create(client, "Vieja", applied_on="2026-01-01")
     _create(client, "Nueva", applied_on="2026-09-01")

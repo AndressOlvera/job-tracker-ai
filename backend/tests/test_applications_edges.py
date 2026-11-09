@@ -1,18 +1,24 @@
 """Huecos de test_applications.py. Aquí el reloj es real: esas pruebas reemplazan clock.today."""
 
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
 
-from app import create_app
+from app import clock, create_app
 
 BASE = "/api/v1/applications"
 VALID = {"company": "Oracle", "position": "Becario"}
 # UTC+14 y UTC-11: 25 horas de diferencia, así que nunca coinciden en la fecha.
 AHEAD = "Pacific/Kiritimati"
 BEHIND = "Pacific/Pago_Pago"
+
+
+class _NoonUtcDatetime(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return datetime(2026, 6, 15, 12, 0, tzinfo=UTC).astimezone(tz)
 
 
 def _client_in_zone(monkeypatch: pytest.MonkeyPatch, zone: str):
@@ -46,8 +52,11 @@ def test_today_in_app_timezone_is_accepted_even_if_ahead_of_utc(monkeypatch: pyt
 def test_date_ahead_of_app_timezone_is_future_even_if_past_elsewhere(
     monkeypatch: pytest.MonkeyPatch,
 ):
+    # Instante fijo: con el reloj real, a medianoche "mañana" podía volverse "hoy" y dar 201.
+    monkeypatch.setattr(clock, "datetime", _NoonUtcDatetime)
     client = _client_in_zone(monkeypatch, BEHIND)
-    tomorrow = datetime.now(ZoneInfo(BEHIND)).date() + timedelta(days=1)
+    tomorrow = _NoonUtcDatetime.now(ZoneInfo(BEHIND)).date() + timedelta(days=1)
+    assert tomorrow == _NoonUtcDatetime.now(ZoneInfo(AHEAD)).date()
 
     response = client.post(BASE, json={**VALID, "applied_on": tomorrow.isoformat()})
 
@@ -116,6 +125,8 @@ def test_delete_only_removes_the_requested_row(client):
     ("method", "path", "kwargs"),
     [
         ("post", BASE, {"json": VALID}),
+        ("get", BASE, {}),
+        ("get", "/api/v1/stats", {}),
         ("get", f"{BASE}/1", {}),
         ("patch", f"{BASE}/1", {"json": {"status": "offer"}}),
         ("delete", f"{BASE}/1", {}),

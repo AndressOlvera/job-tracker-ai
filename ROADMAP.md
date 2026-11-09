@@ -37,7 +37,7 @@ con qué comprobar su trabajo desde el primer PR; y los PR son por fase, no por 
   - Listo cuando: `GET /api/v1/applications` acepta todos los parámetros documentados.
 - [x] **Endpoint de estadísticas** (#7)
   - Listo cuando: `GET /api/v1/stats` devuelve los totales y tasas, incluido el caso sin datos.
-- [ ] **Pruebas con pytest** (#8)
+- [x] **Pruebas con pytest** (#8)
   - Listo cuando: cada endpoint tiene pruebas de éxito y de error contra PostgreSQL real, y la cobertura es ≥ 80 %.
 - [ ] **Linter y datos de ejemplo** (#9)
   - Listo cuando: `ruff check` y `ruff format --check` pasan, y `flask seed` carga postulaciones de ejemplo.
