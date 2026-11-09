@@ -118,3 +118,44 @@ def test_seed_runs_with_production_config(monkeypatch: pytest.MonkeyPatch, app):
     assert "Se cargaron 24" in result.output
     with production.app_context():
         db.engine.dispose()
+
+
+@pytest.fixture
+def production(monkeypatch: pytest.MonkeyPatch, app):
+    monkeypatch.setenv("DATABASE_URL", app.config["SQLALCHEMY_DATABASE_URI"])
+    prod = create_app("production")
+    yield prod
+    with prod.app_context():
+        db.engine.dispose()
+
+
+def _add_mine(app) -> None:
+    app.test_client().post("/api/v1/applications", json={"company": "Mía", "position": "Propia"})
+
+
+@pytest.mark.parametrize("answer", ["n\n", None])
+def test_reset_in_production_without_confirmation_keeps_data(production, answer):
+    _add_mine(production)
+
+    result = production.test_cli_runner().invoke(args=["seed", "--reset"], input=answer)
+
+    assert result.exit_code != 0
+    assert "PRODUCCIÓN" in result.output
+    assert [row.company for row in _rows(production)] == ["Mía"]
+
+
+@pytest.mark.parametrize(("args", "answer"), [(["--reset"], "y\n"), (["--reset", "--yes"], None)])
+def test_reset_in_production_with_confirmation_reloads(production, args, answer):
+    _add_mine(production)
+
+    result = production.test_cli_runner().invoke(args=["seed", *args], input=answer)
+
+    assert result.exit_code == 0, result.output
+    assert len(_rows(production)) == 24
+
+
+def test_reset_outside_production_does_not_prompt(app):
+    result = app.test_cli_runner().invoke(args=["seed", "--reset"])
+
+    assert result.exit_code == 0, result.output
+    assert "PRODUCCIÓN" not in result.output
