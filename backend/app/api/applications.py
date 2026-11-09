@@ -1,10 +1,17 @@
+from typing import Any
+
 from flask import Blueprint, Response, jsonify, url_for
 from werkzeug.routing import BaseConverter
 
 from app.models import Application
-from app.schemas import ApplicationCreate, ApplicationResponse, ApplicationUpdate
+from app.schemas import (
+    ApplicationCreate,
+    ApplicationListParams,
+    ApplicationResponse,
+    ApplicationUpdate,
+)
 from app.services import applications as service
-from app.validation import parse_json_body
+from app.validation import parse_json_body, parse_query_params
 
 applications_bp = Blueprint("applications", __name__)
 
@@ -22,9 +29,19 @@ class ApplicationIdConverter(BaseConverter):
         return str(value)
 
 
+def _to_dict(application: Application) -> dict[str, Any]:
+    return ApplicationResponse.model_validate(application).model_dump(mode="json")
+
+
 def _serialize(application: Application) -> Response:
-    body = ApplicationResponse.model_validate(application).model_dump(mode="json")
-    return jsonify(body)
+    return jsonify(_to_dict(application))
+
+
+@applications_bp.get("/applications")
+def list_applications() -> Response:
+    params = parse_query_params(ApplicationListParams)
+    result = service.list_applications(**params.model_dump())
+    return jsonify({**result, "items": [_to_dict(item) for item in result["items"]]})
 
 
 @applications_bp.post("/applications")

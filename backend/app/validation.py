@@ -29,6 +29,13 @@ def _to_details(error: PydanticValidationError) -> dict[str, list[str]]:
     return details
 
 
+def _validate[Schema: BaseModel](schema: type[Schema], data: dict) -> Schema:
+    try:
+        return schema.model_validate(data)
+    except PydanticValidationError as error:
+        raise RequestValidationError(_to_details(error)) from None
+
+
 def parse_json_body[Schema: BaseModel](schema: type[Schema]) -> Schema:
     """Valida el cuerpo JSON; Flask responde 415 sin Content-Type JSON y 400 si no se puede leer."""
     try:
@@ -38,7 +45,9 @@ def parse_json_body[Schema: BaseModel](schema: type[Schema]) -> Schema:
         raise BadRequest() from None
     if not isinstance(payload, dict):
         raise RequestValidationError({BODY_KEY: ["El cuerpo debe ser un objeto JSON."]})
-    try:
-        return schema.model_validate(payload)
-    except PydanticValidationError as error:
-        raise RequestValidationError(_to_details(error)) from None
+    return _validate(schema, payload)
+
+
+def parse_query_params[Schema: BaseModel](schema: type[Schema]) -> Schema:
+    """Valida la query string; un parámetro vacío equivale a no enviarlo."""
+    return _validate(schema, {name: value for name, value in request.args.items() if value})

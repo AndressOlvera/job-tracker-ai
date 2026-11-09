@@ -9,7 +9,9 @@ from pydantic import (
     BeforeValidator,
     ConfigDict,
     Field,
+    ValidationInfo,
     field_serializer,
+    field_validator,
     model_validator,
 )
 from pydantic_core import PydanticCustomError
@@ -21,6 +23,10 @@ from app.models import APPLICATION_STATUSES
 # antes de Pydantic para que no haya coerción de tipos ni textos en inglés.
 REQUIRED_MESSAGE = "Este campo es obligatorio."
 _DATE_PATTERN = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+_DIGITS_PATTERN = re.compile(r"[0-9]+")
+_MAX_INT_DIGITS = 100
+MAX_PER_PAGE = 100
+SORT_FIELDS = ("applied_on", "company", "status", "created_at")
 
 
 def _invalid(message: str) -> PydanticCustomError:
@@ -101,18 +107,53 @@ def _status(value: Any) -> str:
     return value
 
 
-def _applied_on(value: Any) -> date:
+def _iso_date(value: Any) -> date:
     invalid_format = _invalid("Debe ser una fecha válida con formato AAAA-MM-DD.")
     # fromisoformat también aceptaría formatos como 20260101 o 2026-W01-1.
     if not isinstance(value, str) or not _DATE_PATTERN.fullmatch(value):
         raise invalid_format
     try:
-        parsed = date.fromisoformat(value)
+        return date.fromisoformat(value)
     except ValueError:
         raise invalid_format from None
+
+
+def _applied_on(value: Any) -> date:
+    parsed = _iso_date(value)
     if parsed > clock.today():
         raise _invalid("La fecha no puede ser futura.")
     return parsed
+
+
+def _query_text(value: Any) -> str | None:
+    return _optional_text(100)(value)
+
+
+def _sort(value: Any) -> str:
+    if value.removeprefix("-") not in SORT_FIELDS:
+        raise _invalid("El orden no es válido.")
+    return value
+
+
+def _digits_to_int(value: Any) -> int | None:
+    if not _DIGITS_PATTERN.fullmatch(value):
+        return None
+    # Recortar evita el límite de dígitos de int(); el número sigue fuera de cualquier rango.
+    return int(value.lstrip("0")[:_MAX_INT_DIGITS] or "0")
+
+
+def _page(value: Any) -> int:
+    number = _digits_to_int(value)
+    if number is None or number < 1:
+        raise _invalid("Debe ser un número entero mayor o igual a 1.")
+    return number
+
+
+def _per_page(value: Any) -> int:
+    number = _digits_to_int(value)
+    if number is None or not 1 <= number <= MAX_PER_PAGE:
+        raise _invalid(f"Debe ser un número entero entre 1 y {MAX_PER_PAGE}.")
+    return number
 
 
 Name = Annotated[str, BeforeValidator(_required_text(120))]
@@ -153,6 +194,26 @@ class ApplicationUpdate(_ApplicationInput):
         if not self.model_fields_set:
             raise _invalid("Envía al menos un campo para modificar.")
         return self
+
+
+class ApplicationListParams(BaseModel):
+    # Los parámetros desconocidos se ignoran (extra="ignore" es el default de Pydantic).
+    status: Status | None = None
+    q: Annotated[str | None, BeforeValidator(_query_text)] = None
+    # applied_to va primero para que applied_from pueda compararse y el error salga con su nombre.
+    applied_to: Annotated[date | None, BeforeValidator(_iso_date)] = None
+    applied_from: Annotated[date | None, BeforeValidator(_iso_date)] = None
+    sort: Annotated[str, BeforeValidator(_sort)] = "-applied_on"
+    page: Annotated[int, BeforeValidator(_page)] = 1
+    per_page: Annotated[int, BeforeValidator(_per_page)] = 20
+
+    @field_validator("applied_from", mode="after")
+    @classmethod
+    def _from_not_after_to(cls, value: date | None, info: ValidationInfo) -> date | None:
+        applied_to = info.data.get("applied_to")
+        if value is not None and applied_to is not None and value > applied_to:
+            raise _invalid("La fecha inicial no puede ser posterior a la fecha final.")
+        return value
 
 
 class ApplicationResponse(BaseModel):
