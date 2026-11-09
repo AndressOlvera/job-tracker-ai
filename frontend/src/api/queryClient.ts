@@ -5,8 +5,8 @@ const MAX_RETRIES = 2;
 
 /**
  * Lee el código HTTP de un error, si lo trae.
- * La issue #12 crea `ApiError` con su `status`; aquí basta con que el error tenga un `status` numérico.
- * Un error de red (`TypeError` de `fetch`) no tiene `status`.
+ * Los errores del cliente son `ApiError` (`client.ts`), con el `status` de la respuesta; aquí
+ * basta con que el error tenga un `status` numérico. Un error de red no tiene `status`.
  */
 function getHttpStatus(error: unknown): number | undefined {
   if (typeof error === 'object' && error !== null && 'status' in error) {

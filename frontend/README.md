@@ -62,5 +62,11 @@ src/
   routes.ts     rutas de la app
 ```
 
+Las pantallas piden y cambian datos solo con los hooks de `src/api/queries.ts` (`useApplications`,
+`useCreateApplication`, …); ninguna llama a `fetch` por su cuenta. Los errores llegan como `ApiError`, con
+el mensaje en español de la API listo para mostrarse y, en un `422`, los errores por campo en `details`.
+
 Para probar una pantalla usa `renderWithProviders('/ruta?filtros')` de `src/test/`: monta la app con un
 router en memoria y un `QueryClient` nuevo sin reintentos ([ADR-012](../docs/05-decisiones.md#adr-012-tanstack-query-para-los-datos-de-la-api)).
+Simula la API con `vi.stubGlobal('fetch', …)` y las respuestas y datos de ejemplo de `src/test/api.ts`
+(`jsonResponse`, `errorResponse`, `makeApplication`, `makeApplicationList`, `makeStats`).
