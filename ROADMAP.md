@@ -62,7 +62,7 @@ con qué comprobar su trabajo desde el primer PR; y los PR son por fase, no por 
   - Listo cuando: el formulario, los filtros y la confirmación de borrado tienen pruebas, con la API simulada.
 - [ ] **Diseño responsive y accesible** (#18)
   - Listo cuando: funciona en pantalla de celular y se puede usar completo con teclado.
-- [ ] **CI del frontend** (#19)
+- [x] **CI del frontend** (#19)
   - Listo cuando: `.github/workflows/ci-frontend.yml` (job `Frontend`) corre ESLint, Prettier, `tsc`, Vitest con cobertura y el build, y guarda la cobertura como artefacto.
 
 ## Fase 3 · Docker

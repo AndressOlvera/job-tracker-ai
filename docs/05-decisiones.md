@@ -237,6 +237,8 @@ Cuando una decisión cambie, no se borra: se agrega un ADR nuevo que la reemplaz
 
 **Decisión.** Un solo workflow (`.github/workflows/ci.yml`) que en cada pull request corre todos los jobs: Backend, Frontend, E2E y SonarQube. Reemplaza la nota de `paths` del ADR-001.
 
+*Reemplazado en parte por el [ADR-025](#adr-025-un-workflow-por-área-sin-filtros-de-carpeta): hay un workflow por área en lugar de un solo `ci.yml`, pero todos siguen corriendo en cada pull request.*
+
 **Consecuencias.**
 - ✅ Configuración simple, y nunca se queda un check pendiente.
 - ✅ Un cambio en la API también se prueba en el navegador (E2E), y al revés.
@@ -369,3 +371,21 @@ Cuando una decisión cambie, no se borra: se agrega un ADR nuevo que la reemplaz
 - ✅ Cada imagen lleva la etiqueta de su commit, así que se sabe qué versión corre. Para regresar a una anterior basta con volver a correr su despliegue.
 - ⚠️ La API se actualiza antes que el frontend. Un cambio que rompa la compatibilidad entre los dos tendría que hacerse en dos pasos.
 - ⚠️ Cada unión a `main` despliega, aunque solo cambie la documentación.
+
+---
+
+## ADR-025: Un workflow por área, sin filtros de carpeta
+
+**Contexto.** El [ADR-016](#adr-016-la-ci-revisa-todo-en-cada-pull-request) juntó todos los checks en un solo workflow, `ci.yml`. En la v2, varias fases avanzan al mismo tiempo en sesiones distintas (`CLAUDE.md`, "Trabajo en paralelo sin choques"), y cada una crea la CI de su área junto con su código. Si todas editaran el mismo `ci.yml`, sus pull requests chocarían en ese archivo.
+
+**Decisión.**
+- Un workflow por área: `ci-backend.yml`, `ci-frontend.yml`, `e2e.yml` y `sonarqube.yml`, con los jobs `Backend`, `Frontend`, `E2E` y `SonarQube`. La protección de `main` exige los checks por el nombre del job, así que esos nombres no cambian. El despliegue sigue en su propio workflow, `deploy.yml` ([ADR-024](#adr-024-el-despliegue-corre-después-de-la-ci-y-respeta-la-infraestructura-apagada)).
+- Se conserva lo esencial del ADR-016: todos corren en cada pull request y en `main`, **sin filtros `paths`**, para que ningún check obligatorio se quede pendiente.
+- Reemplaza la parte del ADR-016 que decía "un solo workflow `ci.yml`".
+
+**Consecuencias.**
+- ✅ Cada fase crea y cambia solo su workflow, sin pisar el trabajo de otra.
+- ✅ Nunca se queda un check pendiente, igual que con el ADR-016.
+- ✅ En la pestaña Actions cada área tiene su historial, y se puede volver a correr un workflow sin repetir los demás.
+- ⚠️ Los disparadores, los permisos y la `concurrency` se repiten en cada workflow; si cambian, hay que cambiarlos en todos.
+- ⚠️ Un workflow no puede esperar a los jobs de otro con `needs`, y `workflow_run` se dispara por cada workflow que termina, no cuando termina toda la CI. SonarQube necesita la cobertura del backend y del frontend ([ADR-018](#adr-018-sonarqube-cloud-analiza-desde-la-ci-y-su-quality-gate-es-obligatorio)) y el despliegue solo debe correr si pasó toda la CI (ADR-024): las fases 4 y 6 tienen que resolverlo en sus workflows.
