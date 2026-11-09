@@ -8,7 +8,7 @@ select = ["E", "W", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "--cov --cov-report=term-missing --cov-fail-under=80"
+addopts = "--cov --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
 
 [tool.coverage.run]
 source = ["app"]

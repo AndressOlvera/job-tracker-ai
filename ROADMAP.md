@@ -41,7 +41,7 @@ con qué comprobar su trabajo desde el primer PR; y los PR son por fase, no por 
   - Listo cuando: cada endpoint tiene pruebas de éxito y de error contra PostgreSQL real, y la cobertura es ≥ 80 %.
 - [x] **Linter y datos de ejemplo** (#9)
   - Listo cuando: `ruff check` y `ruff format --check` pasan, y `flask seed` carga postulaciones de ejemplo.
-- [ ] **CI del backend** (#10)
+- [x] **CI del backend** (#10)
   - Listo cuando: `.github/workflows/ci-backend.yml` (job `Backend`) corre ruff y pytest contra un PostgreSQL temporal en cada PR y en `main`, y guarda la cobertura como artefacto.
 
 ## Fase 2 · Frontend
