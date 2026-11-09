@@ -31,7 +31,7 @@ con qué comprobar su trabajo desde el primer PR; y los PR son por fase, no por 
   - Listo cuando: existe la app con *application factory*, configuración por entorno (desarrollo, pruebas, producción) y `GET /api/v1/health` responde con el estado de la API y la base.
 - [x] **Modelo `Application` y primera migración** (#4)
   - Listo cuando: `flask db upgrade` crea la tabla igual a `docs/02-modelo-de-datos.md`.
-- [ ] **Endpoints CRUD con validación** (#5)
+- [x] **Endpoints CRUD con validación** (#5)
   - Listo cuando: crear, obtener, modificar y eliminar funcionan con las reglas y el formato de errores de `docs/03-api.md`.
 - [ ] **Filtros, búsqueda, orden y paginación** (#6)
   - Listo cuando: `GET /api/v1/applications` acepta todos los parámetros documentados.

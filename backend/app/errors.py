@@ -1,6 +1,8 @@
 from flask import Flask, Response, jsonify
 from werkzeug.exceptions import HTTPException, MethodNotAllowed
 
+from app.validation import RequestValidationError
+
 ERRORS = {
     400: ("bad_request", "El cuerpo de la petición no es JSON válido."),
     404: ("not_found", "El recurso solicitado no existe."),
@@ -21,6 +23,16 @@ def _handle_http_exception(error: HTTPException) -> tuple[Response, int]:
     return response, status
 
 
+def _handle_validation_error(error: RequestValidationError) -> tuple[Response, int]:
+    body = {
+        "code": "validation_error",
+        "message": "Algunos campos no son válidos.",
+        "details": error.details,
+    }
+    return jsonify(error=body), 422
+
+
 def register_error_handlers(app: Flask) -> None:
     # Flask registra en el log las excepciones no controladas y las entrega aquí como 500.
     app.register_error_handler(HTTPException, _handle_http_exception)
+    app.register_error_handler(RequestValidationError, _handle_validation_error)
