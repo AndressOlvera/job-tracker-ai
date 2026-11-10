@@ -112,8 +112,21 @@ export interface MappedApiErrors {
 }
 
 /**
+ * Mensajes de un valor de `details`. La API manda listas de texto, pero esto viene de la red: un
+ * texto suelto cuenta como un solo mensaje y cualquier otra forma (número, objeto, lista sin
+ * texto) es `null`, para que quien llama use el mensaje general en lugar de romperse.
+ */
+function toMessages(value: unknown): string[] | null {
+  if (typeof value === 'string') return value.trim() === '' ? [] : [value];
+  if (!Array.isArray(value)) return null;
+  const texts = value.filter((item): item is string => typeof item === 'string' && item !== '');
+  return texts.length === 0 && value.length > 0 ? null : texts;
+}
+
+/**
  * Reparte los `details` de un `422` entre los campos del formulario (las llaves son los nombres
- * de campo de la API) y el aviso general. Si la API no dio detalles, el aviso es su mensaje.
+ * de campo de la API) y el aviso general. Si la API no dio detalles, o dio algo que no se puede
+ * leer, el aviso es su mensaje.
  */
 export function mapApiErrors(
   details: ValidationDetails | undefined,
@@ -121,11 +134,17 @@ export function mapApiErrors(
 ): MappedApiErrors {
   const fields: FormErrors = {};
   const general: string[] = [];
-  for (const [key, messages] of Object.entries(details ?? {})) {
-    if (!messages || messages.length === 0) continue;
-    if (isFormField(key)) fields[key] = messages.join(' ');
+  const entries = typeof details === 'object' && details !== null ? Object.entries(details) : [];
+  let unreadable = false;
+  for (const [key, value] of entries) {
+    const messages = toMessages(value);
+    if (messages === null) unreadable = true;
+    else if (messages.length === 0) continue;
+    else if (isFormField(key)) fields[key] = messages.join(' ');
     else general.push(...messages);
   }
-  if (Object.keys(fields).length === 0 && general.length === 0) general.push(fallbackMessage);
+  if (unreadable || (Object.keys(fields).length === 0 && general.length === 0)) {
+    general.push(fallbackMessage);
+  }
   return { fields, general };
 }

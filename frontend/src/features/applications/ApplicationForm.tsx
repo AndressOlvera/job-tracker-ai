@@ -331,8 +331,9 @@ function GeneralAlert({ error }: { error: GeneralError }) {
         <p>{error.messages[0]}</p>
       ) : (
         <ul>
-          {error.messages.map((message) => (
-            <li key={message}>{message}</li>
+          {error.messages.map((message, index) => (
+            // El índice en la llave: la API puede repetir un mismo mensaje.
+            <li key={`${index}-${message}`}>{message}</li>
           ))}
         </ul>
       )}

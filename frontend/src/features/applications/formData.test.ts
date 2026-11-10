@@ -154,4 +154,37 @@ describe('mapApiErrors', () => {
     });
     expect(mapApiErrors({}, 'Mensaje').general).toEqual(['Mensaje']);
   });
+
+  it('un texto suelto cuenta como un solo mensaje', () => {
+    const { fields, general } = mapApiErrors(
+      { company: 'Texto suelto.', extra: 'Otro.' } as never,
+      'Mensaje',
+    );
+    expect(fields).toEqual({ company: 'Texto suelto.' });
+    expect(general).toEqual(['Otro.']);
+  });
+
+  it.each([
+    ['un número', 5],
+    ['un objeto', { a: 1 }],
+    ['null', null],
+    ['una lista sin texto', [1, { a: 1 }]],
+  ])('%s en una llave va al aviso general con el mensaje de la API', (_name, value) => {
+    const { fields, general } = mapApiErrors(
+      { company: value, notes: ['Muy largo.'] } as never,
+      'Mensaje',
+    );
+    expect(fields).toEqual({ notes: 'Muy largo.' });
+    expect(general).toEqual(['Mensaje']);
+  });
+
+  it('ignora los elementos que no son texto de una lista', () => {
+    const { fields } = mapApiErrors({ source: ['Uno.', 7, null] } as never, 'x');
+    expect(fields).toEqual({ source: 'Uno.' });
+  });
+
+  it('details que no es un objeto se trata como sin detalles', () => {
+    expect(mapApiErrors('texto' as never, 'Mensaje')).toEqual({ fields: {}, general: ['Mensaje'] });
+    expect(mapApiErrors(null as never, 'Mensaje')).toEqual({ fields: {}, general: ['Mensaje'] });
+  });
 });

@@ -17,12 +17,16 @@ interface ActiveToast {
  */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ActiveToast | null>(null);
-  // Con el mouse encima o el foco dentro el aviso no se cierra solo (WCAG 2.2.1).
-  const [paused, setPaused] = useState(false);
+  // Con el mouse encima o el foco dentro el aviso no se cierra solo (WCAG 2.2.1). Son dos
+  // banderas: quitar el mouse no debe reanudar la cuenta si el foco sigue dentro, ni al revés.
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const paused = hovered || focused;
 
   const show = useCallback((message: string) => {
     setToast((current) => ({ id: (current?.id ?? 0) + 1, message }));
-    setPaused(false);
+    setHovered(false);
+    setFocused(false);
   }, []);
 
   useEffect(() => {
@@ -41,10 +45,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={styles.toast}
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            onFocus={() => setPaused(true)}
-            onBlur={() => setPaused(false)}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
           >
             <p className={styles.message}>{toast.message}</p>
             <button type="button" className={styles.close} onClick={() => setToast(null)}>
