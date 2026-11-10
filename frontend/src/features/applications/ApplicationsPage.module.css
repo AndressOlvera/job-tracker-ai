@@ -1,0 +1,92 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 11rem 11rem;
+  gap: var(--space-3);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.dateInput {
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: 0 var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.clearRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Reserva la altura del renglón aunque aún no haya resultados, para que la tabla no brinque. */
+.summary {
+  min-height: 1.5rem;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-muted);
+  scroll-margin-top: var(--space-4);
+}
+
+.errorBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--status-rejected-text);
+  background: var(--status-rejected-soft);
+  border-radius: var(--radius-md);
+}
+
+.errorBanner p {
+  margin: 0;
+}
+
+@media (max-width: 40rem) {
+  .toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* La búsqueda ocupa todo el ancho; las dos fechas, una al lado de la otra. */
+  .toolbar > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .clearRow button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,47 @@
+/* Punto de color de un estado. El nombre siempre va al lado: el color nunca va solo. */
+.dot {
+  display: inline-block;
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--dot-color, currentColor);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.125rem var(--space-3) 0.125rem var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--badge-text);
+  background: var(--badge-bg);
+  border-radius: var(--radius-full);
+}
+
+.applied {
+  --dot-color: var(--status-applied);
+  --badge-text: var(--status-applied-text);
+  --badge-bg: var(--status-applied-soft);
+}
+
+.interview {
+  --dot-color: var(--status-interview);
+  --badge-text: var(--status-interview-text);
+  --badge-bg: var(--status-interview-soft);
+}
+
+.offer {
+  --dot-color: var(--status-offer);
+  --badge-text: var(--status-offer-text);
+  --badge-bg: var(--status-offer-soft);
+}
+
+.rejected {
+  --dot-color: var(--status-rejected);
+  --badge-text: var(--status-rejected-text);
+  --badge-bg: var(--status-rejected-soft);
+}

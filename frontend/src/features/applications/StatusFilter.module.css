@@ -1,0 +1,71 @@
+/* Franja proporcional: solo decoración, los números están en los botones. */
+.strip {
+  display: flex;
+  gap: 2px;
+  height: 0.5rem;
+  margin-bottom: var(--space-3);
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+}
+
+.segment {
+  min-width: 0.5rem;
+  flex-basis: 0;
+}
+
+.segment[data-status='applied'] {
+  background: var(--status-applied);
+}
+
+.segment[data-status='interview'] {
+  background: var(--status-interview);
+}
+
+.segment[data-status='offer'] {
+  background: var(--status-offer);
+}
+
+.segment[data-status='rejected'] {
+  background: var(--status-rejected);
+}
+
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: 0 var(--space-4);
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+}
+
+.button:hover {
+  background: var(--color-primary-soft);
+}
+
+/* El botón activo se distingue por fondo, borde grueso y peso, no solo por color. */
+.button[aria-pressed='true'] {
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border: 2px solid var(--color-primary);
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.button[aria-pressed='true'] .count {
+  color: inherit;
+}

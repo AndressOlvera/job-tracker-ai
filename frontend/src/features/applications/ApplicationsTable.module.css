@@ -1,0 +1,269 @@
+.wrapper {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: opacity 150ms;
+}
+
+/* Atenuada, sin mover nada de lugar, mientras llega la página nueva. */
+.refreshing {
+  opacity: 0.6;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.plainHeader,
+.sortHeader {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sortHeader {
+  padding: 0 var(--space-1);
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: 0 var(--space-2);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+
+.sortButton:hover {
+  background: var(--color-primary-soft);
+}
+
+.arrow {
+  color: var(--color-text-muted);
+}
+
+.sortHeader[aria-sort='ascending'] .arrow,
+.sortHeader[aria-sort='descending'] .arrow {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row:hover {
+  background: var(--color-bg);
+}
+
+.company,
+.cell,
+.actionsCell {
+  padding: var(--space-2) var(--space-3);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.company {
+  font-weight: 600;
+}
+
+.cell {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Una fecha partida en dos renglones ("28/09/20 26") no se lee. */
+.nowrap {
+  white-space: nowrap;
+}
+
+.actionsCell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Hueco del ↗ cuando la vacante no tiene enlace, para que ✎ y ✕ queden alineados. */
+.actionSlot {
+  width: var(--touch-target);
+  height: var(--touch-target);
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-primary);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+}
+
+.action:hover {
+  background: var(--color-primary-soft);
+}
+
+.danger {
+  color: var(--color-danger);
+}
+
+.danger:hover {
+  background: var(--status-rejected-soft);
+}
+
+.action:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.action:disabled:hover {
+  background: none;
+}
+
+/* Celular: cada fila es una tarjeta. */
+@media (max-width: 40rem) {
+  .wrapper {
+    overflow: visible;
+    background: none;
+    border: 0;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+
+  .table thead {
+    display: block;
+  }
+
+  /* Los encabezados que ordenan siguen a la mano, como fila de botones sobre las tarjetas. */
+  .table thead tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+  }
+
+  .table thead tr::before {
+    content: 'Ordenar por';
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  .sortHeader {
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+
+  .sortButton {
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+  }
+
+  /* Visibles solo para el lector de pantalla: la tarjeta ya rotula cada dato. */
+  .plainHeader {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* `.table` por delante: si no, `.table tr` y `.table td` (display: block) ganan por especificidad. */
+  .table .row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-1) var(--space-3);
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .row:last-child {
+    border: 1px solid var(--color-border);
+  }
+
+  .company {
+    grid-column: 1;
+    padding: 0;
+    font-size: var(--font-size-lg);
+  }
+
+  .actionsCell {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    padding: 0;
+    margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0 0;
+  }
+
+  .table .cell {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 5rem 1fr;
+    gap: var(--space-2);
+    align-items: center;
+    padding: 0;
+  }
+
+  /* Sin esto la etiqueta del estado se estira a todo el ancho de la tarjeta. */
+  .table .cell > :not(.srOnly) {
+    justify-self: start;
+  }
+
+  .cell::before {
+    content: attr(data-label);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+}
