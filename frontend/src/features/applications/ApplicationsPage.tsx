@@ -31,6 +31,8 @@ interface PendingDelete {
   application: Application;
   /** Era la única fila de una página que no es la primera: al borrarla hay que retroceder. */
   lastOnPage: boolean;
+  /** La URL (filtros y página) desde la que se abrió: solo ahí tiene sentido retroceder. */
+  search: string;
 }
 
 interface DeleteFailure {
@@ -81,9 +83,17 @@ export function ApplicationsPage() {
   const deletingRef = useRef(false);
   // A dónde va el foco al cerrar el diálogo: al ✕ de esa postulación o, si ya no está, al título.
   const focusAfterCloseRef = useRef<number | 'heading' | null>(null);
+  // La dirección vigente, para que una petición en vuelo no pise la que el usuario eligió después.
+  const currentRef = useRef({ filters, locationKey: location.key });
+  // Ubicación de la que se está saliendo porque su página quedó vacía tras borrar (ver abajo).
+  const [leavingKey, setLeavingKey] = useState<string | null>(null);
   const showErrorPanel = !data && isError;
   const filtered = hasActiveFilters(filters);
   const listState = listReturnState(location);
+
+  useEffect(() => {
+    currentRef.current = { filters, locationKey: location.key };
+  });
 
   // Si el foco se perdió porque la lista se reemplazó por el error, pasa al aviso para que el
   // teclado no tenga que volver a empezar desde el inicio de la página.
@@ -114,18 +124,32 @@ export function ApplicationsPage() {
   function requestDelete(application: Application) {
     const lastOnPage = data !== undefined && data.items.length === 1 && filters.page > 1;
     // Si ya hay un diálogo abierto no se abre otro encima.
-    setPendingDelete((current) => current ?? { application, lastOnPage });
+    const search = toSearchParams(filters).toString();
+    setPendingDelete((current) => current ?? { application, lastOnPage, search });
     setDeleteFailure(null);
+  }
+
+  /**
+   * La fila borrada era la última de la última página: se vuelve a la anterior en vez de mostrar
+   * "Esta página no existe". `replace` para que "atrás" no regrese a esa página vacía. Solo si el
+   * usuario sigue en la URL desde la que borró (con atrás/adelante pudo irse a otra mientras
+   * esperaba) y con los filtros vigentes, no con los de cuando pulsó Eliminar.
+   */
+  function stepBackFrom({ lastOnPage, search }: PendingDelete) {
+    const { filters: current, locationKey } = currentRef.current;
+    if (!lastOnPage || toSearchParams(current).toString() !== search) return;
+    // Entre que la lista pierde la fila y la URL cambia hay un instante con la página vacía:
+    // se pinta como "cargando", no como "Esta página no existe".
+    setLeavingKey(locationKey);
+    navigateTo(changeFilters(current, { page: current.page - 1 }), { replace: true });
   }
 
   function cancelDelete() {
     if (!pendingDelete || deletingRef.current) return;
     focusAfterCloseRef.current = pendingDelete.application.id;
-    // Tras un 404 la lista ya se actualizó detrás del diálogo: si la fila era la última de la
-    // última página, esa página quedó vacía y también hay que retroceder.
-    if (deleteFailure?.gone && pendingDelete.lastOnPage) {
-      update({ page: filters.page - 1 }, { replace: true });
-    }
+    // Tras un 404 la lista ya perdió la fila detrás del diálogo: si era la última de la última
+    // página, esa página quedó vacía y también hay que retroceder.
+    if (deleteFailure?.gone) stepBackFrom(pendingDelete);
     setPendingDelete(null);
     setDeleteFailure(null);
   }
@@ -134,17 +158,15 @@ export function ApplicationsPage() {
     if (!pendingDelete || deletingRef.current) return;
     deletingRef.current = true;
     setDeleteFailure(null);
-    const { application, lastOnPage } = pendingDelete;
-    deleteMutation.mutate(application.id, {
+    const target = pendingDelete;
+    deleteMutation.mutate(target.application.id, {
       onSuccess: () => {
         deletingRef.current = false;
         // La fila ya no existe: el foco va al título, no al ✕.
         focusAfterCloseRef.current = 'heading';
+        stepBackFrom(target);
         setPendingDelete(null);
         setDeletedCount((count) => count + 1);
-        // Era lo último de la última página: se vuelve a la anterior en vez de mostrar
-        // "Esta página no existe". `replace` para que "atrás" no regrese a esa página vacía.
-        if (lastOnPage) update({ page: filters.page - 1 }, { replace: true });
       },
       onError: (failure: DeleteError) => {
         deletingRef.current = false;
@@ -275,7 +297,9 @@ export function ApplicationsPage() {
         >
           {error.message}
         </StateMessage>
-      ) : !data || (isPlaceholderData && data.items.length === 0) ? (
+      ) : !data ||
+        (isPlaceholderData && data.items.length === 0) ||
+        (leavingKey === location.key && data.items.length === 0 && data.total > 0) ? (
         <TableSkeleton />
       ) : data.items.length === 0 ? (
         data.total > 0 ? (

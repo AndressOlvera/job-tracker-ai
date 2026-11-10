@@ -115,20 +115,43 @@ export function useUpdateApplication() {
   });
 }
 
+/**
+ * Un borrado (éxito o 404) deja la caché desactualizada, pero NO espera a la lectura nueva: la
+ * mutación se resuelve en cuanto responde el DELETE y las listas y estadísticas se refrescan en
+ * segundo plano. Si esa lectura tardara o fallara, el borrado ya ocurrió y el diálogo de
+ * confirmación no debe quedarse en "Eliminando…". Las invalidaciones se piden de forma síncrona
+ * (queda marcada la caché antes de que la pantalla haga algo más), solo no se espera su resultado.
+ *
+ * El detalle se quita de la caché. Si una pantalla aún tiene ese detalle montado, al redibujarse
+ * crea la consulta de nuevo y la pide (daría 404): quien borra debe salir de esa pantalla. La
+ * lista no abre detalles, así que hoy no ocurre.
+ */
+function dropDeleted(queryClient: QueryClient, id: number) {
+  queryClient.removeQueries({ queryKey: applicationKeys.detail(id), exact: true });
+  // Mientras llega la lista nueva, la que está en caché ya no muestra la fila borrada ni la cuenta.
+  queryClient.setQueriesData<ApplicationList>({ queryKey: applicationKeys.lists() }, (list) => {
+    // `undefined` deja esa lista como está (sin marcarla como recién actualizada).
+    if (!list?.items.some((item) => item.id === id)) return undefined;
+    const total = Math.max(0, list.total - 1);
+    return {
+      ...list,
+      items: list.items.filter((item) => item.id !== id),
+      total,
+      pages: Math.ceil(total / list.per_page),
+    };
+  });
+  // Sin `await`. `invalidateQueries` no rechaza si la lectura falla (el error queda en la consulta).
+  void invalidateListsAndStats(queryClient);
+}
+
 export function useDeleteApplication() {
   const queryClient = useQueryClient();
   return useMutation<void, ApiError, number>({
     mutationFn: deleteApplication,
-    onSuccess: (_data, id) => {
-      // Se quita antes de invalidar para que nadie intente volver a pedir algo que ya no existe.
-      queryClient.removeQueries({ queryKey: applicationKeys.detail(id), exact: true });
-      return invalidateListsAndStats(queryClient);
-    },
+    onSuccess: (_data, id) => dropDeleted(queryClient, id),
     onError: (error, id) => {
       // Un 404 es que ya la habían borrado (otra pestaña): la lista en pantalla está desactualizada.
-      if (error.status !== 404) return;
-      queryClient.removeQueries({ queryKey: applicationKeys.detail(id), exact: true });
-      return invalidateListsAndStats(queryClient);
+      if (error.status === 404) dropDeleted(queryClient, id);
     },
   });
 }

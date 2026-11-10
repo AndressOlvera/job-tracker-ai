@@ -54,7 +54,7 @@ con qué comprobar su trabajo desde el primer PR; y los PR son por fase, no por 
   - Listo cuando: muestra la tabla con filtros en la URL, orden, paginación y estados de carga, vacío y error.
 - [x] **Formulario de crear y editar** (#14) (HU-01, HU-04)
   - Listo cuando: valida en el navegador, muestra los errores `422` de la API por campo y evita envíos dobles.
-- [ ] **Eliminar con confirmación** (#15) (HU-05)
+- [x] **Eliminar con confirmación** (#15) (HU-05)
   - Listo cuando: pide confirmación antes de borrar y avisa el resultado.
 - [ ] **Pantalla de estadísticas** (#16) (HU-06)
   - Listo cuando: muestra las cifras y las dos gráficas, incluido el caso sin datos, sin librerías de gráficas (ADR-011).
