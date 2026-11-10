@@ -10,7 +10,7 @@ de la especificación en `docs/`. Andrés define, revisa y aprueba; tú implemen
 - Modelo de datos: `docs/02-modelo-de-datos.md`
 - API (rutas, validaciones, formato de errores): `docs/03-api.md`
 - Pantallas: `docs/04-pantallas.md`
-- Decisiones de diseño (ADR-001 a ADR-024): `docs/05-decisiones.md`
+- Decisiones de diseño (ADR-001 a ADR-025): `docs/05-decisiones.md`
 - Plan de trabajo: `ROADMAP.md`. Cada casilla es una issue de GitHub; su "Listo cuando" es el criterio de aceptación.
 
 Respeta los ADR. Si algo te obliga a contradecir uno, no lo cambies en silencio:
@@ -33,6 +33,8 @@ Backend (desde `backend/`, con `.venv` activo):
 - Instalar: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt`
 - Revisar: `ruff check . && ruff format --check .`
 - Probar: `pytest` (cobertura mínima 80 %). Necesita PostgreSQL: `docker compose up -d db` desde la raíz.
+- Datos de ejemplo: `flask seed` (no inserta si ya hay filas; `flask seed --reset` vacía la tabla y vuelve a cargar; en producción pide confirmación, o `--yes` para saltarla).
+- `flask` en local necesita `APP_ENV=development` (en el entorno o en `.env`); sin esa variable se asume producción.
 
 Frontend (desde `frontend/`):
 - `npm ci`, `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test`, `npm run build`

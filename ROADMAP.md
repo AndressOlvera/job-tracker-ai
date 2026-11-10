@@ -25,23 +25,23 @@ con qué comprobar su trabajo desde el primer PR; y los PR son por fase, no por 
 
 ## Fase 1 · Backend
 
-- [ ] **Base de datos local con Docker Compose** (#2)
+- [x] **Base de datos local con Docker Compose** (#2)
   - Listo cuando: `docker compose up -d db` levanta PostgreSQL 16 con una base para desarrollo y otra para pruebas, y existe `.env.example` con las variables necesarias.
-- [ ] **Estructura de la app Flask** (#3)
+- [x] **Estructura de la app Flask** (#3)
   - Listo cuando: existe la app con *application factory*, configuración por entorno (desarrollo, pruebas, producción) y `GET /api/v1/health` responde con el estado de la API y la base.
-- [ ] **Modelo `Application` y primera migración** (#4)
+- [x] **Modelo `Application` y primera migración** (#4)
   - Listo cuando: `flask db upgrade` crea la tabla igual a `docs/02-modelo-de-datos.md`.
-- [ ] **Endpoints CRUD con validación** (#5)
+- [x] **Endpoints CRUD con validación** (#5)
   - Listo cuando: crear, obtener, modificar y eliminar funcionan con las reglas y el formato de errores de `docs/03-api.md`.
-- [ ] **Filtros, búsqueda, orden y paginación** (#6)
+- [x] **Filtros, búsqueda, orden y paginación** (#6)
   - Listo cuando: `GET /api/v1/applications` acepta todos los parámetros documentados.
-- [ ] **Endpoint de estadísticas** (#7)
+- [x] **Endpoint de estadísticas** (#7)
   - Listo cuando: `GET /api/v1/stats` devuelve los totales y tasas, incluido el caso sin datos.
-- [ ] **Pruebas con pytest** (#8)
+- [x] **Pruebas con pytest** (#8)
   - Listo cuando: cada endpoint tiene pruebas de éxito y de error contra PostgreSQL real, y la cobertura es ≥ 80 %.
-- [ ] **Linter y datos de ejemplo** (#9)
+- [x] **Linter y datos de ejemplo** (#9)
   - Listo cuando: `ruff check` y `ruff format --check` pasan, y `flask seed` carga postulaciones de ejemplo.
-- [ ] **CI del backend** (#10)
+- [x] **CI del backend** (#10)
   - Listo cuando: `.github/workflows/ci-backend.yml` (job `Backend`) corre ruff y pytest contra un PostgreSQL temporal en cada PR y en `main`, y guarda la cobertura como artefacto.
 
 ## Fase 2 · Frontend

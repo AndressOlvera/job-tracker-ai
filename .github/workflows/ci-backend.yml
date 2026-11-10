@@ -1,0 +1,64 @@
+name: CI Backend
+
+# Sin filtros `paths`: un check obligatorio que no corre deja el PR esperando (ADR-016, ADR-025).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-backend-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          # Credenciales efímeras: el contenedor muere al terminar el job.
+          POSTGRES_USER: jobtracker
+          POSTGRES_PASSWORD: jobtracker
+          POSTGRES_DB: jobtracker_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U jobtracker -d jobtracker_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: testing
+      # conftest.py rechaza bases cuyo nombre no termine en _test.
+      TEST_DATABASE_URL: postgresql+psycopg://jobtracker:jobtracker@localhost:5432/jobtracker_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+      - name: Ruff (lint)
+        run: ruff check .
+      - name: Ruff (formato)
+        run: ruff format --check .
+      - name: Pruebas
+        run: pytest
+      - name: Subir cobertura
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+          if-no-files-found: warn

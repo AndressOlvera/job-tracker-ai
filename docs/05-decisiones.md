@@ -369,3 +369,16 @@ Cuando una decisión cambie, no se borra: se agrega un ADR nuevo que la reemplaz
 - ✅ Cada imagen lleva la etiqueta de su commit, así que se sabe qué versión corre. Para regresar a una anterior basta con volver a correr su despliegue.
 - ⚠️ La API se actualiza antes que el frontend. Un cambio que rompa la compatibilidad entre los dos tendría que hacerse en dos pasos.
 - ⚠️ Cada unión a `main` despliega, aunque solo cambie la documentación.
+
+---
+
+## ADR-025: Un workflow de CI por área, sin filtros `paths`
+
+**Contexto.** El [ADR-016](#adr-016-la-ci-revisa-todo-en-cada-pull-request) pedía un solo `ci.yml`. Pero las fases se trabajan en paralelo en ramas y sesiones distintas, y un archivo compartido provoca conflictos de merge cada vez que dos fases lo editan.
+
+**Decisión.** Un workflow por área: `ci-backend.yml` (job `Backend`), `ci-frontend.yml` (`Frontend`), `e2e.yml` (`E2E`), `sonarqube.yml` (`SonarQube`) y `deploy.yml`. Ninguno usa filtros `paths`, y todos corren en cada pull request y en `main`, así que se mantiene el motivo del ADR-016: un check obligatorio nunca se queda esperando. Los nombres de los jobs son los que exige la protección de `main`.
+
+**Consecuencias.**
+- ✅ Cada fase edita solo su workflow; no hay choques entre ramas.
+- ✅ Los checks siguen corriendo siempre, y se ven por separado en el PR.
+- ⚠️ Los pasos comunes (checkout, caché) se repiten en cada archivo.
