@@ -345,6 +345,21 @@ describe('useDeleteApplication', () => {
   });
 
   it('si la API falla, deja la caché como estaba', async () => {
+    stubApi(() => errorResponse(500, 'internal_error', 'Error interno del servidor.'));
+    const { result, queryClient } = renderQueryHook(() => useDeleteApplication(), {
+      queryClient: seededQueryClient(),
+    });
+
+    act(() => result.current.mutate(42));
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toMatchObject({ status: 500, code: 'internal_error' });
+    expect(queryClient.getQueryData(applicationKeys.detail(42))).toBeDefined();
+    expect(isInvalidated(queryClient, applicationKeys.list({}))).toBe(false);
+    expect(isInvalidated(queryClient, statsKeys.all)).toBe(false);
+  });
+
+  it('si ya no existe (404), sigue siendo un error pero la lista y las estadísticas se invalidan', async () => {
     stubApi(() => errorResponse(404, 'not_found', 'La postulación no existe.'));
     const { result, queryClient } = renderQueryHook(() => useDeleteApplication(), {
       queryClient: seededQueryClient(),
@@ -354,7 +369,9 @@ describe('useDeleteApplication', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toMatchObject({ status: 404, code: 'not_found' });
-    expect(queryClient.getQueryData(applicationKeys.detail(42))).toBeDefined();
-    expect(isInvalidated(queryClient, applicationKeys.list({}))).toBe(false);
+    expect(queryClient.getQueryState(applicationKeys.detail(42))).toBeUndefined();
+    expect(queryClient.getQueryData(applicationKeys.detail(7))).toBeDefined();
+    expect(isInvalidated(queryClient, applicationKeys.list({}))).toBe(true);
+    expect(isInvalidated(queryClient, statsKeys.all)).toBe(true);
   });
 });

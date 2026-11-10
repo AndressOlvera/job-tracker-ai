@@ -11,8 +11,9 @@ interface ApplicationsTableProps {
   sort: ApplicationSort;
   onSort: (field: SortField) => void;
   /**
-   * Se llama al pulsar ✕ en una fila. La confirmación y la llamada a la API son de la issue #15;
-   * mientras no se pase, el botón queda deshabilitado.
+   * Se llama al pulsar ✕ en una fila. La confirmación y la llamada a la API las hace quien lo
+   * pasa; mientras no se pase, el botón queda deshabilitado. El ✕ lleva `data-delete-id` para
+   * devolverle el foco al cerrar el diálogo.
    */
   onDelete?: (application: Application) => void;
   /** Hay una página nueva en camino: la lista actual se atenúa pero sigue visible. */
@@ -111,6 +112,7 @@ export function ApplicationsTable({
                     type="button"
                     className={`${styles.action} ${styles.danger}`}
                     disabled={!onDelete}
+                    data-delete-id={application.id}
                     onClick={() => onDelete?.(application)}
                     aria-label={`Eliminar la postulación de ${application.company}`}
                   >

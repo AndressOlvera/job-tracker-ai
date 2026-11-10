@@ -124,5 +124,11 @@ export function useDeleteApplication() {
       queryClient.removeQueries({ queryKey: applicationKeys.detail(id), exact: true });
       return invalidateListsAndStats(queryClient);
     },
+    onError: (error, id) => {
+      // Un 404 es que ya la habían borrado (otra pestaña): la lista en pantalla está desactualizada.
+      if (error.status !== 404) return;
+      queryClient.removeQueries({ queryKey: applicationKeys.detail(id), exact: true });
+      return invalidateListsAndStats(queryClient);
+    },
   });
 }

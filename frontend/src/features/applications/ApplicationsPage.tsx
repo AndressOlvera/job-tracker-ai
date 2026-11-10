@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams } from 'react-router';
-import { useApplications, useStats } from '../../api/queries';
-import type { SortField } from '../../api/types';
+import { useApplications, useDeleteApplication, useStats } from '../../api/queries';
+import type { Application, SortField } from '../../api/types';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { useToast } from '../../components/toastContext';
 import { ApplicationsTable } from './ApplicationsTable';
 import styles from './ApplicationsPage.module.css';
 import {
@@ -23,6 +25,33 @@ import { StateMessage } from './StateMessage';
 import { StatusFilter } from './StatusFilter';
 import { TableSkeleton } from './TableSkeleton';
 
+/** Lo que el diálogo de eliminar necesita saber de la fila elegida. */
+interface PendingDelete {
+  /** La postulación tal como se veía al pulsar ✕: el texto del diálogo no cambia si la lista se refresca. */
+  application: Application;
+  /** Era la única fila de una página que no es la primera: al borrarla hay que retroceder. */
+  lastOnPage: boolean;
+}
+
+interface DeleteFailure {
+  message: string;
+  /** 404: ya no existe, no tiene caso reintentar. */
+  gone: boolean;
+}
+
+/** Lo que se lee de un `ApiError` (no se importa la clase: ADR-012). */
+interface DeleteError {
+  status: number | undefined;
+  message: string;
+}
+
+export const GONE_MESSAGE = 'Esta postulación ya no existe.';
+
+/** El ✕ de una fila. Se busca en el DOM porque la fila pudo cambiar mientras estaba el diálogo. */
+function findDeleteButton(id: number) {
+  return document.querySelector<HTMLElement>(`[data-delete-id="${id}"]`);
+}
+
 /** Lista de postulaciones (`/`, docs/04-pantallas.md). Los filtros viven en la URL (ADR-013). */
 export function ApplicationsPage() {
   const location = useLocation();
@@ -31,6 +60,7 @@ export function ApplicationsPage() {
   const filters = useMemo(() => parseListSearch(searchParams), [searchParams]);
   const resultsRef = useRef<HTMLParagraphElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   // ¿La renderización anterior mostraba una lista? Si sí y ahora hay un error sin datos, la tabla
   // (con el botón que tenía el foco: encabezado de orden, "Siguiente") acaba de desaparecer.
   const hadListRef = useRef(false);
@@ -41,6 +71,16 @@ export function ApplicationsPage() {
   const stats = useStats();
 
   const { data, isError, isPlaceholderData, error, refetch } = applications;
+
+  const toast = useToast();
+  const deleteMutation = useDeleteApplication();
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [deleteFailure, setDeleteFailure] = useState<DeleteFailure | null>(null);
+  const [deletedCount, setDeletedCount] = useState(0);
+  // Guardia síncrona: dos eventos pueden llegar antes de que React deshabilite el botón.
+  const deletingRef = useRef(false);
+  // A dónde va el foco al cerrar el diálogo: al ✕ de esa postulación o, si ya no está, al título.
+  const focusAfterCloseRef = useRef<number | 'heading' | null>(null);
   const showErrorPanel = !data && isError;
   const filtered = hasActiveFilters(filters);
   const listState = listReturnState(location);
@@ -52,6 +92,67 @@ export function ApplicationsPage() {
     if (showErrorPanel && hadListRef.current && focusLost) errorRef.current?.focus();
     hadListRef.current = Boolean(data);
   }, [showErrorPanel, data]);
+
+  // El diálogo ya se desmontó y la página volvió a ser accesible (`inert`): ahora sí se puede
+  // enfocar. Se intenta el ✕ de la fila; si ya no existe (se borró), el título, para que el foco
+  // no caiga en <body>. Va en un efecto porque corre después de que el diálogo limpia su `inert`.
+  useEffect(() => {
+    if (pendingDelete) return;
+    const target = focusAfterCloseRef.current;
+    focusAfterCloseRef.current = null;
+    if (target === null) return;
+    const button = target === 'heading' ? null : findDeleteButton(target);
+    (button ?? headingRef.current)?.focus();
+  }, [pendingDelete]);
+
+  // El aviso va aquí y no junto al cierre del diálogo: mientras está abierto el fondo es `inert`,
+  // y un cambio en la región `role="status"` en ese momento no se anunciaría.
+  useEffect(() => {
+    if (deletedCount > 0) toast.show('Postulación eliminada');
+  }, [deletedCount, toast]);
+
+  function requestDelete(application: Application) {
+    const lastOnPage = data !== undefined && data.items.length === 1 && filters.page > 1;
+    // Si ya hay un diálogo abierto no se abre otro encima.
+    setPendingDelete((current) => current ?? { application, lastOnPage });
+    setDeleteFailure(null);
+  }
+
+  function cancelDelete() {
+    if (!pendingDelete || deletingRef.current) return;
+    focusAfterCloseRef.current = pendingDelete.application.id;
+    // Tras un 404 la lista ya se actualizó detrás del diálogo: si la fila era la última de la
+    // última página, esa página quedó vacía y también hay que retroceder.
+    if (deleteFailure?.gone && pendingDelete.lastOnPage) {
+      update({ page: filters.page - 1 }, { replace: true });
+    }
+    setPendingDelete(null);
+    setDeleteFailure(null);
+  }
+
+  function confirmDelete() {
+    if (!pendingDelete || deletingRef.current) return;
+    deletingRef.current = true;
+    setDeleteFailure(null);
+    const { application, lastOnPage } = pendingDelete;
+    deleteMutation.mutate(application.id, {
+      onSuccess: () => {
+        deletingRef.current = false;
+        // La fila ya no existe: el foco va al título, no al ✕.
+        focusAfterCloseRef.current = 'heading';
+        setPendingDelete(null);
+        setDeletedCount((count) => count + 1);
+        // Era lo último de la última página: se vuelve a la anterior en vez de mostrar
+        // "Esta página no existe". `replace` para que "atrás" no regrese a esa página vacía.
+        if (lastOnPage) update({ page: filters.page - 1 }, { replace: true });
+      },
+      onError: (failure: DeleteError) => {
+        deletingRef.current = false;
+        const gone = failure.status === 404;
+        setDeleteFailure({ message: gone ? GONE_MESSAGE : failure.message, gone });
+      },
+    });
+  }
 
   /** Escribe los filtros nuevos en la URL. Sin cambio real no se navega (no ensucia el historial). */
   function navigateTo(next: ListFilters, { replace = false } = {}) {
@@ -92,7 +193,9 @@ export function ApplicationsPage() {
     <>
       <div className={styles.header}>
         <div>
-          <h1>Postulaciones</h1>
+          <h1 ref={headingRef} tabIndex={-1}>
+            Postulaciones
+          </h1>
           {stats.data && (
             <p className={styles.subtitle}>
               {formatNumber(stats.data.total)}{' '}
@@ -225,6 +328,7 @@ export function ApplicationsPage() {
             sort={filters.sort}
             onSort={(field: SortField) => update({ sort: nextSort(filters.sort, field) })}
             isRefreshing={isPlaceholderData}
+            onDelete={requestDelete}
           />
           <Pagination page={filters.page} pages={data.pages} onPageChange={changePage} />
         </>
@@ -234,6 +338,20 @@ export function ApplicationsPage() {
       <p className="visually-hidden" aria-live="polite" aria-atomic="true">
         {summary && data && !isPlaceholderData ? announce(summary, data.pages, data.page) : ''}
       </p>
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title={`¿Eliminar la postulación a ${pendingDelete.application.company}?`}
+          description={`${pendingDelete.application.position}. Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          busyLabel="Eliminando…"
+          busy={deleteMutation.isPending}
+          error={deleteFailure?.message}
+          retryable={!deleteFailure?.gone}
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+      )}
     </>
   );
 }

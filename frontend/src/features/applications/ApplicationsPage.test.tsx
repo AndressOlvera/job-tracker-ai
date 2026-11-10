@@ -725,13 +725,13 @@ describe('ApplicationsPage', () => {
       expect(screen.queryByRole('link', { name: /Abrir la vacante de Intel/ })).toBeNull();
     });
 
-    it('eliminar queda deshabilitado hasta que la issue #15 lo conecte, con su nombre accesible', async () => {
+    it('eliminar está habilitado y tiene su nombre accesible', async () => {
       stubApi();
       renderWithProviders('/');
       await findTable();
       expect(
         screen.getByRole('button', { name: 'Eliminar la postulación de Empresa 1' }),
-      ).toBeDisabled();
+      ).toBeEnabled();
     });
 
     it('la fecha se ve dd/mm/aaaa sin perder un día', async () => {

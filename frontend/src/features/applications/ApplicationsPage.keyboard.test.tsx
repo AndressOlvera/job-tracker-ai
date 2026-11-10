@@ -58,7 +58,7 @@ describe('orden de tabulación', () => {
     await findTable();
 
     const seen: string[] = [];
-    for (let i = 0; i < 21; i++) {
+    for (let i = 0; i < 23; i++) {
       await user.tab();
       seen.push(focusedName());
     }
@@ -82,8 +82,10 @@ describe('orden de tabulación', () => {
       'Fecha↓',
       'Abrir la vacante de Oracle (se abre en una pestaña nueva)',
       'Editar la postulación de Oracle',
-      // Intel no tiene enlace: no hay parada. Los ✕ (deshabilitados hasta #15) y "Anterior" tampoco.
+      'Eliminar la postulación de Oracle',
+      // Intel no tiene enlace: no hay parada. "Anterior" (deshabilitado) tampoco.
       'Editar la postulación de Intel',
+      'Eliminar la postulación de Intel',
       'Siguiente',
     ]);
   });
@@ -94,9 +96,13 @@ describe('orden de tabulación', () => {
     await findTable();
     screen.getByRole('button', { name: 'Siguiente' }).focus();
     await user.tab({ shift: true });
+    expect(focusedName()).toBe('Eliminar la postulación de Empresa 2');
+    await user.tab({ shift: true });
     expect(focusedName()).toBe('Editar la postulación de Empresa 2');
     await user.tab({ shift: true });
     expect(focusedName()).toBe('Abrir la vacante de Empresa 2 (se abre en una pestaña nueva)');
+    await user.tab({ shift: true });
+    expect(focusedName()).toBe('Eliminar la postulación de Empresa 1');
     await user.tab({ shift: true });
     expect(focusedName()).toBe('Editar la postulación de Empresa 1');
     await user.tab({ shift: true });
