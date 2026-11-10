@@ -535,8 +535,8 @@ describe('ApplicationsPage', () => {
       stubApi({ list: () => new Promise<Response>(() => {}) });
       const { container } = renderWithProviders('/');
 
-      expect(await screen.findByText('Cargando postulaciones…')).toBeInTheDocument();
-      expect(screen.getByRole('status')).toHaveTextContent('Cargando postulaciones…');
+      // Hay más de una región de estado en la app (la de los avisos), por eso se busca por texto.
+      expect(await screen.findByText('Cargando postulaciones…')).toHaveAttribute('role', 'status');
       expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
       expect(screen.queryByText(/Mostrando/)).not.toBeInTheDocument();

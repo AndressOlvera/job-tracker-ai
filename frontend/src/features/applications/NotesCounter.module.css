@@ -1,0 +1,10 @@
+.counter {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.over {
+  font-weight: 600;
+  color: var(--color-danger);
+}

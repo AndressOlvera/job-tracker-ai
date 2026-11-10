@@ -1,6 +1,7 @@
 import { useRef, type MouseEvent } from 'react';
 import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router';
 import styles from './Layout.module.css';
+import { ToastProvider } from './ToastProvider';
 
 /** Barra superior y contenido principal, comunes a todas las pantallas. */
 export function Layout() {
@@ -13,7 +14,7 @@ export function Layout() {
   }
 
   return (
-    <>
+    <ToastProvider>
       <a href="#contenido" className={styles.skipLink} onClick={skipToContent}>
         Saltar al contenido
       </a>
@@ -45,6 +46,6 @@ export function Layout() {
       </main>
       {/* Al cambiar de pantalla se empieza arriba; con atrás/adelante se recupera la posición. */}
       <ScrollRestoration />
-    </>
+    </ToastProvider>
   );
 }

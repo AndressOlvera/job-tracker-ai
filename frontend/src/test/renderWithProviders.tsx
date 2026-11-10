@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createMemoryRouter, type RouteObject } from 'react-router';
+import { createMemoryRouter, type InitialEntry, type RouteObject } from 'react-router';
 import { App } from '../App';
 import { routes as appRoutes } from '../routes';
 
@@ -26,12 +26,13 @@ interface RenderWithProvidersOptions {
 }
 
 /**
- * Monta la app en `route` (p. ej. `/?status=interview`, ADR-013) con un router en memoria y un
+ * Monta la app en `route` (p. ej. `/?status=interview`, ADR-013; también acepta un objeto con
+ * `pathname` y `state`, como la lista al abrir el formulario) con un router en memoria y un
  * QueryClient nuevo. Devuelve lo de `render` más `user` (user-event), `router` (para revisar la
  * URL con `router.state.location`) y `queryClient`.
  */
 export function renderWithProviders(
-  route = '/',
+  route: InitialEntry = '/',
   { routes = appRoutes, queryClient = createTestQueryClient() }: RenderWithProvidersOptions = {},
 ) {
   const router = createMemoryRouter(routes, { initialEntries: [route] });

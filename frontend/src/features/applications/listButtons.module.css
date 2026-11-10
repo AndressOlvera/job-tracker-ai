@@ -33,3 +33,18 @@
 .secondary:hover {
   background: var(--color-primary-soft);
 }
+
+/* Mientras se envía un formulario el botón se ve apagado y no parece clicable. */
+.primary:disabled,
+.secondary:disabled {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+.primary:disabled:hover {
+  background: var(--color-primary);
+}
+
+.secondary:disabled:hover {
+  background: var(--color-surface);
+}

@@ -1,0 +1,42 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--touch-target);
+  margin-bottom: var(--space-2);
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+}
+
+.skeleton {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  max-width: 48rem;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.bar {
+  height: var(--touch-target);
+  background: var(--color-border);
+  border-radius: var(--radius-md);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (min-width: 48rem) {
+  .skeleton {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: var(--space-5);
+  }
+}
