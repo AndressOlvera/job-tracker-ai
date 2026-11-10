@@ -27,6 +27,10 @@ describe('getReturnTo', () => {
     'https://malo.example',
     '//malo.example',
     '/\\malo.example',
+    '/\t/evil.com',
+    '/\n/evil.com',
+    '/\r/evil.com',
+    '/\u0000/evil.com',
     'stats',
     'javascript:alert(1)',
   ])('no acepta destinos fuera de la app (%s)', (returnTo) => {

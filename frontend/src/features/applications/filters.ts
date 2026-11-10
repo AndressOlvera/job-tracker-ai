@@ -5,7 +5,8 @@
  * Todo lo que llega por la URL puede estar escrito a mano, así que lo inválido se ignora en vez
  * de romper la pantalla:
  * - `status` que no existe, `sort` fuera de la lista y `q` vacío (solo espacios) se descartan.
- * - Una fecha mal escrita o imposible (`2026-02-31`) se descarta.
+ *   De `q` se quitan además los caracteres de control.
+ * - Una fecha mal escrita o imposible (`2026-02-31`, o del año 0000) se descarta.
  * - `page` que no sea un entero entre 1 y `MAX_PAGE` vale 1.
  * - `applied_from` posterior a `applied_to`: la API respondería 422, así que se descartan las
  *   DOS fechas (no hay forma de saber cuál quiso el usuario). Desde la interfaz no se llega a
@@ -42,9 +43,18 @@ export interface ListFilters {
 /** Los filtros por defecto: lista sin filtrar, primera página. */
 export const DEFAULT_FILTERS: ListFilters = { sort: DEFAULT_SORT, page: 1 };
 
-/** Recorta espacios y el largo máximo. Un texto vacío significa "sin búsqueda". */
+/** Caracteres de control (incluido NUL, que PostgreSQL rechaza). */
+// eslint-disable-next-line no-control-regex -- justo lo que se quiere quitar
+const CONTROL_CHARS = /[\u0000-\u001f\u007f]/g;
+
+/**
+ * Quita caracteres de control y espacios sobrantes y recorta al largo máximo. Un texto vacío
+ * significa "sin búsqueda". Se recorta por puntos de código, no por unidades UTF-16, para no
+ * partir un emoji a la mitad (llegaría como U+FFFD).
+ */
 export function normalizeQuery(text: string): string {
-  return text.trim().slice(0, MAX_QUERY_LENGTH).trim();
+  const clean = text.replace(CONTROL_CHARS, '').trim();
+  return Array.from(clean).slice(0, MAX_QUERY_LENGTH).join('').trim();
 }
 
 /** `YYYY-MM-DD` de un día que existe en el calendario. No pasa por zonas horarias. */
@@ -53,6 +63,8 @@ export function isValidIsoDate(value: unknown): value is IsoDate {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return false;
   const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  // La API (Python) no acepta el año 0: `date.MINYEAR` es 1.
+  if (year < 1) return false;
   // `setUTCFullYear` (a diferencia de `Date.UTC`) no convierte los años 0-99 en 1900-1999.
   const date = new Date(0);
   date.setUTCFullYear(year, month - 1, day);

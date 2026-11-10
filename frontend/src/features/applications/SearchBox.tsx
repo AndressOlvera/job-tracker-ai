@@ -13,6 +13,12 @@ interface SearchBoxProps {
   value: string;
   /** Se llama con el texto ya normalizado (`''` = sin búsqueda). */
   onSearch: (query: string) => void;
+  /**
+   * Cambia con cada navegación atrás/adelante (la `key` de la ubicación) y es `undefined` en las
+   * demás. Con atrás/adelante el campo se restablece a la URL aunque `q` sea el mismo: si no, lo
+   * tecleado y aún no aplicado se quedaría en el campo y el temporizador lo aplicaría después.
+   */
+  historyKey?: string;
 }
 
 /**
@@ -21,7 +27,7 @@ interface SearchBoxProps {
  * pierde ni el texto ni el foco. Solo se reescribe cuando la URL cambia por otro lado (atrás,
  * adelante, "Limpiar filtros").
  */
-export function SearchBox({ value, onSearch }: SearchBoxProps) {
+export function SearchBox({ value, onSearch, historyKey }: SearchBoxProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<number | undefined>(undefined);
   // Lo último que este campo aplicó (o leyó de la URL): distingue un cambio propio de uno externo.
@@ -33,11 +39,11 @@ export function SearchBox({ value, onSearch }: SearchBoxProps) {
   });
 
   useEffect(() => {
-    if (value === appliedRef.current) return;
+    if (historyKey === undefined && value === appliedRef.current) return;
     appliedRef.current = value;
     window.clearTimeout(timerRef.current);
     if (inputRef.current) inputRef.current.value = value;
-  }, [value]);
+  }, [value, historyKey]);
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 

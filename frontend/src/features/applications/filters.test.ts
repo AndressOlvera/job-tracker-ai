@@ -136,15 +136,35 @@ describe('isValidIsoDate', () => {
     expect(isValidIsoDate(value)).toBe(true);
   });
 
-  it.each(['2026-02-30', '2026-00-10', '2026-04-31', '0000-00-00', '26-09-28', '', null, 20260928])(
-    '%j no es válida',
-    (value) => {
-      expect(isValidIsoDate(value)).toBe(false);
-    },
-  );
+  it.each([
+    '0000-01-01',
+    '2026-02-30',
+    '2026-00-10',
+    '2026-04-31',
+    '0000-00-00',
+    '26-09-28',
+    '',
+    null,
+    20260928,
+  ])('%j no es válida', (value) => {
+    expect(isValidIsoDate(value)).toBe(false);
+  });
 });
 
 describe('normalizeQuery', () => {
+  it('quita los caracteres de control (NUL, tabuladores, saltos de línea)', () => {
+    expect(normalizeQuery('a\u0000b')).toBe('ab');
+    expect(normalizeQuery('\u0000')).toBe('');
+    expect(normalizeQuery('or\tacle\n')).toBe('oracle');
+    expect(parse('q=%00').q).toBeUndefined();
+  });
+
+  it('recorta por puntos de código: no parte un emoji a la mitad', () => {
+    const result = normalizeQuery('a' + '😀'.repeat(150));
+    expect(Array.from(result)).toHaveLength(MAX_QUERY_LENGTH);
+    expect(result).not.toContain('\uFFFD');
+  });
+
   it('recorta espacios y largo', () => {
     expect(normalizeQuery('  oracle  ')).toBe('oracle');
     expect(normalizeQuery('   ')).toBe('');

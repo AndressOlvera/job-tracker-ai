@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router';
+import { useEffect, useMemo, useRef } from 'react';
+import { Link, useLocation, useNavigationType, useSearchParams } from 'react-router';
 import { useApplications, useStats } from '../../api/queries';
 import type { SortField } from '../../api/types';
 import { ApplicationsTable } from './ApplicationsTable';
@@ -26,9 +26,14 @@ import { TableSkeleton } from './TableSkeleton';
 /** Lista de postulaciones (`/`, docs/04-pantallas.md). Los filtros viven en la URL (ADR-013). */
 export function ApplicationsPage() {
   const location = useLocation();
+  const navigationType = useNavigationType();
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useMemo(() => parseListSearch(searchParams), [searchParams]);
   const resultsRef = useRef<HTMLParagraphElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  // ¿La renderización anterior mostraba una lista? Si sí y ahora hay un error sin datos, la tabla
+  // (con el botón que tenía el foco: encabezado de orden, "Siguiente") acaba de desaparecer.
+  const hadListRef = useRef(false);
 
   const applications = useApplications(toApiFilters(filters));
   // Los conteos de los botones y "N registradas en total" salen de /stats (toda la cuenta), no de
@@ -36,8 +41,17 @@ export function ApplicationsPage() {
   const stats = useStats();
 
   const { data, isError, isPlaceholderData, error, refetch } = applications;
+  const showErrorPanel = !data && isError;
   const filtered = hasActiveFilters(filters);
   const listState = listReturnState(location);
+
+  // Si el foco se perdió porque la lista se reemplazó por el error, pasa al aviso para que el
+  // teclado no tenga que volver a empezar desde el inicio de la página.
+  useEffect(() => {
+    const focusLost = !document.activeElement || document.activeElement === document.body;
+    if (showErrorPanel && hadListRef.current && focusLost) errorRef.current?.focus();
+    hadListRef.current = Boolean(data);
+  }, [showErrorPanel, data]);
 
   /** Escribe los filtros nuevos en la URL. Sin cambio real no se navega (no ensucia el historial). */
   function navigateTo(next: ListFilters, { replace = false } = {}) {
@@ -99,7 +113,11 @@ export function ApplicationsPage() {
         />
 
         <div className={styles.toolbar}>
-          <SearchBox value={filters.q ?? ''} onSearch={(q) => update({ q }, { replace: true })} />
+          <SearchBox
+            value={filters.q ?? ''}
+            onSearch={(q) => update({ q }, { replace: true })}
+            historyKey={navigationType === 'POP' ? location.key : undefined}
+          />
           <div className={styles.field}>
             <label htmlFor="applications-from" className={styles.label}>
               Desde
@@ -141,8 +159,9 @@ export function ApplicationsPage() {
         {summary}
       </p>
 
-      {!data && isError ? (
+      {showErrorPanel ? (
         <StateMessage
+          ref={errorRef}
           role="alert"
           title="No se pudieron cargar las postulaciones"
           actions={

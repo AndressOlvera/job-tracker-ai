@@ -14,6 +14,9 @@ export interface ListReturnState {
 
 export const DEFAULT_RETURN_TO = '/';
 
+// eslint-disable-next-line no-control-regex -- justo lo que se quiere rechazar
+const CONTROL_OR_BACKSLASH = /[\u0000-\u001f\u007f\\]/;
+
 /** Ruta de la lista (con su búsqueda) para guardarla en el `state` de un enlace. */
 export function listReturnState(location: { pathname: string; search: string }): ListReturnState {
   return { returnTo: `${location.pathname}${location.search}` };
@@ -30,5 +33,8 @@ export function getReturnTo(state: unknown): string {
   const { returnTo } = state;
   if (typeof returnTo !== 'string') return DEFAULT_RETURN_TO;
   const isInternal = returnTo.startsWith('/') && !returnTo.startsWith('//');
-  return isInternal && !returnTo.includes('\\') ? returnTo : DEFAULT_RETURN_TO;
+  // El navegador descarta tabuladores y saltos de línea al interpretar una URL: `/\t/evil.com`
+  // se volvería `//evil.com`. Un `\` también se toma como `/`.
+  const hasUnsafeChars = CONTROL_OR_BACKSLASH.test(returnTo);
+  return isInternal && !hasUnsafeChars ? returnTo : DEFAULT_RETURN_TO;
 }
